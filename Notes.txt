@@ -1,8 +1,9 @@
 
-
+//Old Lenovo
 sudo ip addr add 192.168.122.10/24 dev enx3c18a056ec46
 sudo ip link set enx3c18a056ec46 up
 
 
-sudo ip addr add 192.168.122.20/24 dev enx3c18a056ec46
-sudo ip link set enx3c18a056ec46 up
+// New Lenovo
+sudo ip addr add 192.168.122.20/24 dev enxc84d4435e825
+sudo ip link set enxc84d4435e825: up
