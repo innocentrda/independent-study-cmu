@@ -1,9 +1,18 @@
 
 //Old Lenovo
-sudo ip addr add 192.168.122.10/24 dev enx3c18a056ec46
+sudo ip addr add 192.168.20.10/24 dev enx3c18a056ec46
 sudo ip link set enx3c18a056ec46 up
+
+virt-install --virt-type=kvm --name ubuntu24-cloud-node10 --vcpus 4 --ram 4096 --cloud-init user-data=/home/innocent/projects/cmu/independent-study-cmu/node10/cloud-init-config.cfg --os-variant=ubuntu-lts-latest --disk /vm-disks/ubuntu24-cloud-node10.qcow2,size=30 --network type=direct,source=enx3c18a056ec46,source_mode=bridge,model=virtio --graphics vnc,listen=0.0.0.0 --noautoconsole --import
+virt-install --virt-type=kvm --name ubuntu24-cloud-node3 --vcpus 4 --ram 8192 --cloud-init user-data=/home/innocent/projects/cmu/independent-study-cmu/node3/cloud-init-config.cfg --os-variant=ubuntu-lts-latest --disk /vm-disks/ubuntu24-cloud-node3.qcow2,size=30 --network type=direct,source=enx3c18a056ec46,source_mode=bridge,model=virtio --graphics vnc,listen=0.0.0.0 --noautoconsole --import
+virt-install --virt-type=kvm --name ubuntu24-cloud-node4 --vcpus 4 --ram 8192 --cloud-init user-data=/home/innocent/projects/cmu/independent-study-cmu/node4/cloud-init-config.cfg --os-variant=ubuntu-lts-latest --disk /vm-disks/ubuntu24-cloud-node4.qcow2,size=30 --network type=direct,source=enx3c18a056ec46,source_mode=bridge,model=virtio --graphics vnc,listen=0.0.0.0 --noautoconsole --import
+virt-install --virt-type=kvm --name ubuntu24-cloud-node5 --vcpus 4 --ram 8192 --cloud-init user-data=/home/innocent/projects/cmu/independent-study-cmu/node5/cloud-init-config.cfg --os-variant=ubuntu-lts-latest --disk /vm-disks/ubuntu24-cloud-node5.qcow2,size=30 --network type=direct,source=enx3c18a056ec46,source_mode=bridge,model=virtio --graphics vnc,listen=0.0.0.0 --noautoconsole --import
+virt-install --virt-type=kvm --name ubuntu24-cloud-node6 --vcpus 4 --ram 8192 --cloud-init user-data=/home/innocent/projects/cmu/independent-study-cmu/node6/cloud-init-config.cfg --os-variant=ubuntu-lts-latest --disk /vm-disks/ubuntu24-cloud-node6.qcow2,size=30 --network type=direct,source=enx3c18a056ec46,source_mode=bridge,model=virtio --graphics vnc,listen=0.0.0.0 --noautoconsole --import
 
 
 // New Lenovo
-sudo ip addr add 192.168.122.20/24 dev enxc84d4435e825
+sudo ip addr add 192.168.20.20/24 dev enxc84d4435e825
 sudo ip link set enxc84d4435e825: up
+
+virt-install --virt-type=kvm --name ubuntu24-cloud-node1 --vcpus 4 --ram 8192 --cloud-init user-data=/home/innocent/projects/cmu/independent-study-cmu/node1/cloud-init-config.cfg --os-variant=ubuntu-lts-latest --disk /vm-disks/ubuntu24-cloud-node1.qcow2,size=30 --network type=direct,source=enx3c18a056ec46,source_mode=bridge,model=virtio --graphics vnc,listen=0.0.0.0 --noautoconsole --import
+virt-install --virt-type=kvm --name ubuntu24-cloud-node2 --vcpus 4 --ram 8192 --cloud-init user-data=/home/innocent/projects/cmu/independent-study-cmu/node2/cloud-init-config.cfg --os-variant=ubuntu-lts-latest --disk /vm-disks/ubuntu24-cloud-node2.qcow2,size=30 --network type=direct,source=enx3c18a056ec46,source_mode=bridge,model=virtio --graphics vnc,listen=0.0.0.0 --noautoconsole --import
