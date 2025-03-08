@@ -1,0 +1,149 @@
+#!/bin/bash
+
+useradd -m -s /bin/bash openstack && useradd -m -s /bin/bash ceph1
+echo "openstack ALL=(ALL:ALL) NOPASSWD:ALL" >> /etc/sudoers.d/openstack
+echo "ceph1 ALL=(ALL:ALL) NOPASSWD:ALL" >> /etc/sudoers.d/openstack
+mkdir -p /home/openstack/.ssh && mkdir -p /home/ceph1/.ssh
+echo "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQCk3PzPg3DnpQrDLOCTfqrMnVQ7HKilR9llQL/GuxEmU9bXDKKAjGyOIXEfgPdNWWEqw9Zcv+IxXF2jcc135myiTr+u2+8XB65eBXcbHwZJwBc2ucfLwW4Ujq8Ml+2prWdM8yixO6KjmX8WUrQ0BPWFk61t4KFNDb+/EmUXHRibUQJQp9aRDBxeVskwPcMMgtkmz4S8KrfZ7SQ5ohYz+dWZo3d3GzP/6wuUDon5Cxk1a3Ok2jWTgkUurgyrOWXqZ5w0ML2NAmpyb/tsEAwihRrDB0Vkp5UMLN8laAYG1VLSuMw4EY/41nZYukYnuhH0IwRfrpvarm5NxbrBA4nYqZxhsMwWG9Ag0EKTwbUR9yfqxbGS0g4UKfMZzi/A8SJ+y6tURNdwrmB0/sG9DRrszi98L6jyZ7nKSyyHN3F/b0NszK1osdsX4WZcbQiaCAh6sJAsRn93E24RK5WLx4RXTHAMf6oKUC63EmmW0OfwEZBGebHsn/u4Cj+nPuX5AeEzvb8= innocent@innocent-ThinkPad-X1-Extreme-Gen-3" >> /home/openstack/.ssh/authorized_keys
+echo "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQCk3PzPg3DnpQrDLOCTfqrMnVQ7HKilR9llQL/GuxEmU9bXDKKAjGyOIXEfgPdNWWEqw9Zcv+IxXF2jcc135myiTr+u2+8XB65eBXcbHwZJwBc2ucfLwW4Ujq8Ml+2prWdM8yixO6KjmX8WUrQ0BPWFk61t4KFNDb+/EmUXHRibUQJQp9aRDBxeVskwPcMMgtkmz4S8KrfZ7SQ5ohYz+dWZo3d3GzP/6wuUDon5Cxk1a3Ok2jWTgkUurgyrOWXqZ5w0ML2NAmpyb/tsEAwihRrDB0Vkp5UMLN8laAYG1VLSuMw4EY/41nZYukYnuhH0IwRfrpvarm5NxbrBA4nYqZxhsMwWG9Ag0EKTwbUR9yfqxbGS0g4UKfMZzi/A8SJ+y6tURNdwrmB0/sG9DRrszi98L6jyZ7nKSyyHN3F/b0NszK1osdsX4WZcbQiaCAh6sJAsRn93E24RK5WLx4RXTHAMf6oKUC63EmmW0OfwEZBGebHsn/u4Cj+nPuX5AeEzvb8= innocent@innocent-ThinkPad-X1-Extreme-Gen-3" >> /home/ceph1/.ssh/authorized_keys
+chown -R ceph1:ceph1 /home/ceph1 && chown -R openstack:openstack /home/openstack && chmod -R 755 /home/ceph1 && chmod -R 755 /home/openstack
+apt update && apt upgrade -y
+apt update && apt install -y build-essential
+while true; do
+    echo "Attempting to download..."
+    wget https://github.com/SoftEtherVPN/SoftEtherVPN_Stable/releases/download/v4.38-9760-rtm/softether-vpnclient-v4.38-9760-rtm-2021.08.17-linux-x64-64bit.tar.gz && break
+    echo "Download failed. Retrying in 1 minute..."
+    sleep 5
+done
+tar -xzf softether-vpnclient-v4.38-9760-rtm-2021.08.17-linux-x64-64bit.tar.gz
+cd vpnclient && make
+chmod -x /etc/update-motd.d/*
+cat > /etc/update-motd.d/10-uname << EOF
+#!/bin/sh
+export TERM=xterm-256color
+
+read one five fifteen rest < /proc/loadavg
+echo "$(tput setaf 2)
+$(tput setaf 5)
+ ______________
+Compute Team. IP range 10.10.x.61-80
+ --------------                                     Available Interfaces:
+        \\   ^__^
+         \\  (oo)\\_______                       MGT range: 10.10.10.61-80
+            (__)\\       )\\\/\\                 API range: 10.10.20.61-80
+                ||----w |                        ACC range: 10.10.30.61-80
+                ||     ||                        EXT range: 10.10.50.61-80
+
+$(tput sgr0)"
+EOF
+chmod +x /etc/update-motd.d/10-uname
+cat <<EOF > vpn_client.config
+root@network-comp1:/vpnclient# cat vpn_client.config 
+# Software Configuration File
+# ---------------------------
+# 
+# You may edit this file when the VPN Server / Client / Bridge program is not running.
+# 
+# In prior to edit this file manually by your text editor,
+# shutdown the VPN Server / Client / Bridge background service.
+# Otherwise, all changes will be lost.
+# 
+declare root
+{
+	bool DisableRelayServer false
+	bool DontSavePassword false
+	bool EnableVPNGateService false
+	byte EncryptedPassword +WzqGYrR3VYXrAhKPZLGEHcIwO8=
+	bool HideVPNGateServiceMessage false
+	bool PasswordRemoteOnly false
+	string UserAgent Mozilla/5.00(Windows0NT06.3;0WOW64;0rv:29.0)0Gecko/201001010Firefox/29.0
+	uint UseSecureDeviceId 0
+
+	declare AccountDatabase
+	{
+		declare Account0
+		{
+			bool CheckServerCert false
+			uint64 CreateDateTime 1741403553041
+			uint64 LastConnectDateTime 1741403584723
+			string ShortcutKey 339C98879BA8273ABE7A8D7A594C85B2837EFCAD
+			bool StartupAccount false
+			uint64 UpdateDateTime 1741403567133
+
+			declare ClientAuth
+			{
+				uint AuthType 1
+				byte HashedPassword b/biFI0HDnbUC7z8peulDwm2js4=
+				string Username worker-node
+			}
+			declare ClientOption
+			{
+				string AccountName myvpn
+				uint AdditionalConnectionInterval 1
+				uint ConnectionDisconnectSpan 0
+				string DeviceName softether
+				bool DisableQoS false
+				bool HalfConnection false
+				bool HideNicInfoWindow false
+				bool HideStatusWindow false
+				string Hostname 16.171.227.113
+				string HubName VPN
+				uint MaxConnection 1
+				bool NoRoutingTracking false
+				bool NoTls1 false
+				bool NoUdpAcceleration false
+				uint NumRetry 4294967295
+				uint Port 443
+				uint PortUDP 0
+				string ProxyName $
+				byte ProxyPassword $
+				uint ProxyPort 0
+				uint ProxyType 0
+				string ProxyUsername $
+				bool RequireBridgeRoutingMode false
+				bool RequireMonitorMode false
+				uint RetryInterval 15
+				bool UseCompress false
+				bool UseEncrypt true
+			}
+		}
+	}
+	declare ClientManagerSetting
+	{
+		bool EasyMode false
+		bool LockMode false
+	}
+	declare CommonProxySetting
+	{
+		string ProxyHostName $
+		uint ProxyPort 0
+		uint ProxyType 0
+		string ProxyUsername $
+	}
+	declare Config
+	{
+		bool AllowRemoteConfig false
+		uint64 AutoDeleteCheckDiskFreeSpaceMin 104857600
+		string KeepConnectHost keepalive.softether.org
+		uint KeepConnectInterval 50
+		uint KeepConnectPort 80
+		uint KeepConnectProtocol 1
+		bool NoChangeWcmNetworkSettingOnWindows8 false
+		bool UseKeepConnect false
+	}
+	declare RootCA
+	{
+	}
+	declare UnixVLan
+	{
+		declare softether
+		{
+			bool Enabled true
+			string MacAddress 5E-63-1F-38-9C-67
+		}
+	}
+}
+EOF
+./vpnclient start
+ip addr add 192.168.0.67/24 dev vpn_softether
+ip link set vpn_softether up
