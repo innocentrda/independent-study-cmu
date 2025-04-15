@@ -3,6 +3,12 @@
 sudo ip addr add 192.168.20.10/24 dev enx3c18a056ec46
 sudo ip link set enx3c18a056ec46 up
 
+sudo qemu-img convert -f qcow2 -O qcow2 /images/noble-server-cloudimg-amd64.img  /vm-disks/ubuntu24-cloud-node9.qcow2
+sudo qemu-img resize /vm-disks/ubuntu24-cloud-node9.qcow2 30G
+virt-install --virt-type=kvm --name ubuntu24-cloud-node9 --vcpus 4 --ram 4096 --cloud-init user-data=/home/innocent/projects/cmu/independent-study-cmu/node9/cloud-init-config.cfg --os-variant=ubuntu-lts-latest --disk /vm-disks/ubuntu24-cloud-node9.qcow2,size=30 --network type=direct,source=enx3c18a056ec46,source_mode=bridge,model=virtio --graphics vnc,listen=0.0.0.0 --noautoconsole --import
+virt-install --virt-type=kvm --name ubuntu24-cloud-node9 --vcpus 4 --ram 4096 --cloud-init user-data=/home/innocent/projects/cmu/independent-study-cmu/node9/cloud-init-config.cfg --os-variant=ubuntu-lts-latest --disk /vm-disks/ubuntu24-cloud-node9.qcow2,size=30 --network network=default --graphics vnc,listen=0.0.0.0 --noautoconsole --import
+
+
 sudo qemu-img convert -f qcow2 -O qcow2 /images/noble-server-cloudimg-amd64.img  /vm-disks/ubuntu24-cloud-node10.qcow2
 sudo qemu-img resize /vm-disks/ubuntu24-cloud-node10.qcow2 30G
 virt-install --virt-type=kvm --name ubuntu24-cloud-node10 --vcpus 4 --ram 4096 --cloud-init user-data=/home/innocent/projects/cmu/independent-study-cmu/node10/cloud-init-config.cfg --os-variant=ubuntu-lts-latest --disk /vm-disks/ubuntu24-cloud-node10.qcow2,size=30 --network type=direct,source=enx3c18a056ec46,source_mode=bridge,model=virtio --graphics vnc,listen=0.0.0.0 --noautoconsole --import

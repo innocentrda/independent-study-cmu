@@ -19,8 +19,8 @@ spec:
 
 # ---
 # # Step 4: Label both clusters
-# kubectl --kubeconfig=karmada-config1 label cluster compute-cluster location=compute-cluster gpu=low
-# kubectl --kubeconfig=karmada-config1 label cluster storage-cluster location=storage-cluster gpu=high
+kubectl --kubeconfig=.kube/karmada-config label cluster compute-cluster location=compute-cluster gpu=low
+kubectl --kubeconfig=.kube/karmada-config label cluster storage-cluster location=storage-cluster gpu=high
 ---
 # Step 5: Create cluster selectors
 

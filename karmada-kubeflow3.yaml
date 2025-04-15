@@ -6,7 +6,7 @@
 apiVersion: config.karmada.io/v1alpha1
 kind: ResourceInterpreterCustomization
 metadata:
-  name: pod-interpreter-for-argo
+  name: pod-interpreter-for-argo-extended
 spec:
   target:
     apiVersion: v1
@@ -16,7 +16,7 @@ spec:
       luaScript: |
         function interpretReplicaResource(obj)
           local labels = obj.metadata and obj.metadata.labels or {}
-          if labels["pipelines.kubeflow.org/pipeline-runtime"] then
+          if labels["pipelines.kubeflow.org/pipeline-runtime"] or labels["job-type"] or labels["resource-size"] then
             return {
               status = {
                 replicas = 1
@@ -25,6 +25,28 @@ spec:
           end
           return nil
         end
+---
+
+apiVersion: policy.karmada.io/v1alpha1
+kind: PropagationPolicy
+metadata:
+  name: kfp-system-pods-policy
+  namespace: kubeflow
+spec:
+  resourceSelectors:
+    - apiVersion: v1
+      kind: Pod
+      labelSelector:
+        matchExpressions:
+          - key: pipelines.kubeflow.org/task_name
+            operator: Exists
+  placement:
+    clusterAffinity:
+      clusterNames:
+        - compute-cluster
+        - storage-cluster
+  priority: 10
+
 ---
 # Step 7: Create cluster selectors
 apiVersion: policy.karmada.io/v1alpha1
