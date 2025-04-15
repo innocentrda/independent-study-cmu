@@ -1,0 +1,127 @@
+# Step 3: Create a ResourceInterpreter for Kubeflow job pods
+
+apiVersion: config.karmada.io/v1alpha1
+kind: ResourceInterpreterCustomization
+metadata:
+  name: pod-interpreter-for-argo
+spec:
+  target:
+    apiVersion: v1
+    kind: Pod
+  customization:
+    # Only interpret pods created by Argo Workflow (Kubeflow uses these)
+    interpreterRules:
+      replicaResource:
+        jsonPath: ".metadata.labels"
+        byPaths:
+        - path: ".workflow"
+        - path: ".workflows\\.argoproj\\.io/workflow"
+
+# ---
+# # Step 4: Label both clusters
+# kubectl --kubeconfig=karmada-config1 label cluster compute-cluster location=compute-cluster gpu=low
+# kubectl --kubeconfig=karmada-config1 label cluster storage-cluster location=storage-cluster gpu=high
+---
+# Step 5: Create cluster selectors
+
+apiVersion: cluster.karmada.io/v1alpha1
+kind: ClusterSelector
+metadata:
+  name: compute-cluster-selector
+spec:
+  labelSelector:
+    matchLabels:
+      location: compute-cluster
+---
+apiVersion: cluster.karmada.io/v1alpha1
+kind: ClusterSelector
+metadata:
+  name: storage-cluster-selector
+spec:
+  labelSelector:
+    matchLabels:
+      location: storage-cluster
+
+---
+# Step 6: Create PropagationPolicy for small jobs (to stay compute-cluster)
+
+apiVersion: policy.karmada.io/v1alpha1
+kind: PropagationPolicy
+metadata:
+  name: small-jobs-compute-cluster
+  namespace: kubeflow
+spec:
+  resourceSelectors:
+    - apiVersion: v1
+      kind: Pod
+      labelSelector:
+        matchExpressions:
+          - key: workflows.argoproj.io/workflow
+            operator: Exists
+          - key: resource-size
+            operator: In
+            values: ["small"]
+  placement:
+    clusterAffinity:
+      clusterNames:
+        - compute-cluster
+  priority: 2
+
+---
+# Step 7: Create PropagationPolicy for GPU-intensive jobs (to go to storage-cluster)
+
+apiVersion: policy.karmada.io/v1alpha1
+kind: PropagationPolicy
+metadata:
+  name: ml-jobs-to-storage-cluster
+  namespace: kubeflow
+spec:
+  resourceSelectors:
+    - apiVersion: v1
+      kind: Pod
+      labelSelector:
+        matchExpressions:
+          - key: workflows.argoproj.io/workflow
+            operator: Exists
+          - key: resource-size
+            operator: In
+            values: ["large"]
+  placement:
+    clusterAffinity:
+      clusterNames:
+        - storage-cluster
+  priority: 1
+
+---
+# Step 8: Create PropagationPolicy for parallel jobs (to be distributed)
+
+apiVersion: policy.karmada.io/v1alpha1
+kind: PropagationPolicy
+metadata:
+  name: parallel-jobs-distributed
+  namespace: kubeflow
+spec:
+  resourceSelectors:
+    - apiVersion: v1
+      kind: Pod
+      labelSelector:
+        matchExpressions:
+          - key: workflows.argoproj.io/workflow
+            operator: Exists
+          - key: parallel-task
+            operator: Exists
+  placement:
+    replicaScheduling:
+      replicaDivisionPreference: Weighted
+      replicaSchedulingType: Divided
+      weightPreference:
+        staticWeightList:
+          - targetCluster:
+              clusterNames:
+                - compute-cluster
+            weight: 10
+          - targetCluster:
+              clusterNames:
+                - storage-cluster  
+            weight: 90
+  priority: 3

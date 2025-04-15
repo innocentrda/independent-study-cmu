@@ -1,0 +1,129 @@
+
+---
+
+# karmada-sa.yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: karmada-access
+  namespace: karmada-system
+
+
+kubectl --kubeconfig=.kube/storage-config create clusterrolebinding karmada-access-binding --clusterrole=cluster-admin --serviceaccount=karmada-system:karmada-access
+
+
+---
+
+# karmada-access-token.yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: karmada-access-token
+  namespace: karmada-system
+  annotations:
+    kubernetes.io/service-account.name: karmada-access
+type: kubernetes.io/service-account-token
+
+
+
+
+
+SECRET_NAME=karmada-access-token
+
+# Get the token
+TOKEN=$(kubectl --kubeconfig=.kube/storage-config -n karmada-system get secret $SECRET_NAME -o jsonpath='{.data.token}' | base64 -d)
+
+# Show the token
+echo $TOKEN
+
+
+
+# openstack@network-deploy:~$ cat karmada-config1 
+# apiVersion: v1
+# kind: Config
+# clusters:
+#   - cluster:
+#       server: https://10.10.10.30:5443
+#       insecure-skip-tls-verify: true
+#     name: karmada-apiserver
+# users:
+#   - user:
+#       client-certificate-data: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSUZOekNDQTUrZ0F3SUJBZ0lVY0Z0MVkxNk41SUdJY1JLTUZzM0djcFpEckgwd0RRWUpLb1pJaHZjTkFRRU0KQlFBd1hERUxNQWtHQTFVRUJoTUNlSGd4Q2pBSUJnTlZCQWdNQVhneENqQUlCZ05WQkFjTUFYZ3hDakFJQmdOVgpCQW9NQVhneENqQUlCZ05WQkFzTUFYZ3hDekFKQmdOVkJBTU1BbU5oTVJBd0RnWUpLb1pJaHZjTkFRa0JGZ0Y0Ck1CNFhEVEkxTURNeU1EQTBOVEV3TUZvWERUTXdNRE14T1RBME5URXdNRm93TURFWE1CVUdBMVVFQ2hNT2MzbHoKZEdWdE9tMWhjM1JsY25NeEZUQVRCZ05WQkFNVERITjVjM1JsYlRwaFpHMXBiakNDQWFJd0RRWUpLb1pJaHZjTgpBUUVCQlFBRGdnR1BBRENDQVlvQ2dnR0JBTHV6eFhGdE1IYzdzZ2pLVDU2UEZhLzlqeTlWb3NpMHJha2N4c3FBClJBT3A3S3Y0RnE5RFRvS3BSQThDSnBmSmE1Nk51T2VYTm5xVWJzbld2MDQrQnlMaHRwY3liZDRidDR6VSthZW8KbktJKzFRNU90NDdydGhqMHYvTWtsZWNGZ3VRb0FCWXRlb3RsM1p1UUtSYzllazNVSHNmUld6emNHYkFicFBkbgpiTnNUT1M3R1plVWtJQ1Y5MUFvUG5PNURiaWtTejloMExaY0Q0disyVGVRUGZ4NlBjTUlBWjk2VHVwYUxHUTl1ClhCeFBzamxDT0tWYjBMN0dtNWNpaXlLRWdyZ0I2M05hdGsyVG5rcWZJK3NMbUNLcHJuVVFDOGkvZGsvU2VaMU8KZkpaUVlvUmtEVENmT0ZseHc0bWlnMDAxYldnRS9jU2JWdlpqQTFEajVOK2lxaVN6M3dQOXdHb05tOUkzYk9aZgpOK2V6QW5IYmJ2V292NGVRb0RpS2F5YWh3TVhWUG8rNko5V1QzTVo2VFl2Z1RMczFhU296VmZaMi9aaEFNc2pZCkN0WWtsd1lBcnZielBZWkN1V2ZUWEtXZ3o5TXZRVi9LWUJhMmhVQngzTkhWN0VSNVVkcnFucUkvOXBXRHJOeXYKUTA1eHh2cHZnK0tZR0NWWlZXRWJDemRlWHdJREFRQUJvNElCR3pDQ0FSY3dEZ1lEVlIwUEFRSC9CQVFEQWdXZwpNQjBHQTFVZEpRUVdNQlFHQ0NzR0FRVUZCd01DQmdnckJnRUZCUWNEQVRBTUJnTlZIUk1CQWY4RUFqQUFNQjBHCkExVWREZ1FXQkJSSksvMXNSdEdHUzhoNjdIQ3hPSjJUZEZvbkp6QWZCZ05WSFNNRUdEQVdnQlNJQnAwUmhMdjMKcU9WT0RiTFE4ZTVqL296SDBUQ0Jsd1lEVlIwUkJJR1BNSUdNZ2hacmRXSmxjbTVsZEdWekxtUmxabUYxYkhRdQpjM1pqZ2ljcUxtVjBZMlF1YTJGeWJXRmtZUzF6ZVhOMFpXMHVjM1pqTG1Oc2RYTjBaWEl1Ykc5allXeUNJaW91CmEyRnliV0ZrWVMxemVYTjBaVzB1YzNaakxtTnNkWE4wWlhJdWJHOWpZV3lDRkNvdWEyRnliV0ZrWVMxemVYTjAKWlcwdWMzWmpnZ2xzYjJOaGJHaHZjM1NIQkg4QUFBRXdEUVlKS29aSWh2Y05BUUVNQlFBRGdnR0JBRnlobG9yTQpBMGREdTd6N1lQYzhoVWNuc0trR2MzY0FPR2FwbVYvZWpkN2pXdTBJbVllVlg3Ni9hUXdHa1U5UGlxcksxOHRCCk1qeUlLMjNYbXN0bVN1Mi9lTkVzWXVoZmxQWndwSWZMblNnOXN2ZCtnYnFRZm5aK3JFSEZTcVR2N3NBSVlBM1QKQUxsZ0tJanQwTmJxaktoY0xCYWIyTUZHQ1U3ZGVQblF6UVk4S2NVc1ZacXZhMWlWcHNlOU9SanQzckoxK1h5ZApvNUlPYzdwcTVBVGFDekRWcEp5aFE3aGprWk9NK1o2Rlp0ZU9IUlErTDVjS2FQYnhXNTJWUmJWczlMeVJQRGxwCnJaOXpCbnljSVNMV2FYMk1MU2xvcDF0OURpZHZHOEVYVjRZNHlucnNwa3hqeGM4VkMyZ3JvVnc2ekUrZis3OTcKK1FnL20yQ1FDSHV1NXE1MEkyMkd3dXM3SGthLzNjdnk2c3VUcThCSGZ4aDNaUjQ2RXNmTzBtL1MvWjQ1OWY5awpka1VEb0hia093aWxEWHQyb3VheXFVeFFuakZ1NGRSVnJCM3hzNlBEbGRWbGpZamtsTW9Pa2p1K2x4WGswdHZJCkpZWWFYUWRoVHNUVkhCVklQbVA1NjFlQTVQM2FUTm1iV3hFQjJFZEEwUWk5MXllOWRiVDFYZTAyeGc9PQotLS0tLUVORCBDRVJUSUZJQ0FURS0tLS0tCg==
+#       client-key-data: LS0tLS1CRUdJTiBSU0EgUFJJVkFURSBLRVktLS0tLQpNSUlHNUFJQkFBS0NBWUVBdTdQRmNXMHdkenV5Q01wUG5vOFZyLzJQTDFXaXlMU3RxUnpHeW9CRUE2bnNxL2dXCnIwTk9ncWxFRHdJbWw4bHJubzI0NTVjMmVwUnV5ZGEvVGo0SEl1RzJsekp0M2h1M2pOVDVwNmljb2o3VkRrNjMKanV1MkdQUy84eVNWNXdXQzVDZ0FGaTE2aTJYZG01QXBGejE2VGRRZXg5RmJQTndac0J1azkyZHMyeE01THNabAo1U1FnSlgzVUNnK2M3a051S1JMUDJIUXRsd1BpLzdaTjVBOS9Ibzl3d2dCbjNwTzZsb3NaRDI1Y0hFK3lPVUk0CnBWdlF2c2FibHlLTElvU0N1QUhyYzFxMlRaT2VTcDhqNnd1WUlxbXVkUkFMeUw5MlQ5SjVuVTU4bGxCaWhHUU4KTUo4NFdYSERpYUtEVFRWdGFBVDl4SnRXOW1NRFVPUGszNktxSkxQZkEvM0FhZzJiMGpkczVsODM1N01DY2R0dQo5YWkvaDVDZ09JcHJKcUhBeGRVK2o3b24xWlBjeG5wTmkrQk11elZwS2pOVjluYjltRUF5eU5nSzFpU1hCZ0N1Cjl2TTloa0s1WjlOY3BhRFAweTlCWDhwZ0ZyYUZRSEhjMGRYc1JIbFIydXFlb2ovMmxZT3MzSzlEVG5IRyttK0QKNHBnWUpWbFZZUnNMTjE1ZkFnTUJBQUVDZ2dHQUpTVGhHSjRiN2l4eEFjNVBUVGhSZVY4Nis0bjl5YXYvaGF5OQpKZ3VWNmdleFh5S2NFcGpHSzVNbGRiYmVQa0ZNdTdhZDlhNTF5SEloTG00QnM1RVF4blZXTmJ0MEJIVUZzS2ZnCnM2M3BPUzRuNlVub2h5N2IvVHBKMWVyU2cwSVM4ZVY4aHViL0RpRGRadEJ6WVRiNFFmaU5Fc3U2TzJQdTdXdTcKREg1NkN5eFZyNHp4VXhRQURJdEc3NnJCU21FcnBwTWpjRmtsUUhJemRKajE5d0NlRGtVaWNqRzBYRlp0b1NicgprYU1zTlNvTVFjcDUvVGNiS3ZXUWlxcjZUNTFiRGdIWHhqNGM1YmM4aVhCbjQ3Z1hnN280TnpiOEx1WmNqT3ZoCjRJWm45WUNrWnphN3d2RnA5TUhlYmVVUEZYZUhZNHNib2JBclJ3eTN2eFlGOWd4YlpKaUE3Y0VuVzR2OUdNcEQKdHlUUXBYZHgyVThHVmpuN2diTlM3eHFQSjZtQ3VuUm5RMnhVeFl6S1ViVGFpcVFsQWdWTUJmdVp5VmJZNzNHVgpOc04yYTJ2Ri84alJRK2JvbDU4cjhuNklKTWVSQm5SNWt3Mi9uL08va2cyamh0ck55SGZVVjBJYUhmSGVVTmNoCnQ4b3dxTXExWjJOTjlHTkpYMFk0V3VMQ1o0blJBb0hCQU9hcFNndENXU0RGa0hkdWJhK2tCR00vY0VZQlNIeDQKTkhUVjVuTWJ2MGZNdEpheVErbWVOVWlvT2hLdUhOSDVyQlE5dUE4K2d1WCszSXQ3bWNyOGJaaUFBLzEyWjl2SgpTRnNBaTYvc283VUR3ZS9ZZ2tDSWpseXF5bCtQMXVaSm1iYzVZQjFEMEttT2djY2VEZGxuOVRDbFNFZEhncFNGClB6QVUyS1dnTW5YU0xyWGJuU0p6bXA0Mll2aXJnWVR1Q2pKUVNqU2xVV2txaWdpRW5iQWNzNzByOUR5emc4eVUKN2VHWnM2MlZ0dHVEbGROeHBYaUhXVTZEYTBEbUhJNDhGd0tCd1FEUVVtQ2V5NU0wZ0NoTlI0czNySm5qNWd5bQpMa3h1QUkvSDZPc2RqelY3V2JJVG5ITE9OeG1RcVpOQ2s1US9JbmpOcU1XQlZXTW1oT2N4eC9nWVMzeGl3SDBBCmNvVEhJUlFiVFBwVk5mYWgrVENCQy9QWkpORDczTGtVTCszMll6THJ6a1RsM2Q2bFNkK1l5b2NmeXY5bTFDWkYKRFpXb28yU01LZXI2Y1diUllwLzhvWkNmSTcxaTN3dFZIQ2hjblBHdnIzUEYxZnpiOGx2eUFYZlFRS2pyVHo2bApMS3pPY1p0a1VPSXJYdkdEMGZEcklMM1VwejVEKzVDYkN1dlA5UGtDZ2NFQTVnY2JwV0RVVzU5S3RDQTNXTHJiCitWSVJtRzY5S0F3RVhDUFl2eUNEd0ltLzZxejZseWRFZ2lIcVVDaTg2eFh2YXZ3bDYyWHV5b2xBemdWRVdTOGwKNkxoNXdqSnIzcjY3M3EwTG9UVUFDWXdtd3hjS3htcW9kbmVJZklhSXpIM0h3dmFBQ0k5UnIxWkR6QndIdWJFMwp6dngxdVVmeVRFVVp2OHg2UmFvZHlHd0VVeTRoWlhNZVZmdHM5Z3FyanJLSkRxWU5hclVYSENibEl4dUYybFMxClZzbFh0NVZhc2hJdnJSVklINnMzZ1hDWFlSZHI2bWdvUXVsQ2M2VklBdnlmQW9IQVNTUkRMRDNKcDJzL3V6SmQKWE9USyswc3dNY0Nic1J1ZFg5RVZpOEZXUThMUVZUWmUwS3hqMjNqT2JWZW5leXM5UXVmNHdGb2NmOCsxNUxLVApGdVNaL1lvYjJXWmIzQlp2R3M3Q0xkek9oVHdhblpSMnYweS8yMDQ1NVM2VzNDVWtJY3JBUWZ6T1NUWlF2VEtPCmtza1JOeWRSY0hrK2pJRWhzbHlkVmVVdTltRXNUdVRqQkJ6bVI2cU1MZ3UrMkJWNmZmYWFMV0hlYjlMK0dWQU8Kb3gyd3NUMlhmeUxhWVhsZDE3RFdWK2Z6NEJaOEFmSHk5SkRydWE2L3JNLyt6M3J4QW9IQkFNMXZ1L1FyKzdrMAp2bWgzK0FvM01qQmtyWGlLSmlVcGNkUnVzY3NXenNHRHd2UEpraEVEVXdkTnFjaUdQVHp4ZlB5NzZNWjZwL1BVClZ5OWtMN2taZXNTTzhlSGpzTWNBd0dIb04yRzE5WU4wQzh0UmZYQy9PTElCbUpZNzFzOFA5VmJtdDBLU2tTcXkKNVlhOTl0T1E5YTE4djQyZ0tJQjgxa1N5S1pvWnREdHFGWGxkZ0dzaEIyaEdhOXNIZElMS2dEalFaUGY1NUtDVApNUTRQV1djRHhhd3A3NGdJcnI3eTdNNEV2Q25UMXc1dEc5R2grZnRDYStMd2RuU3ZJdzlKOWc9PQotLS0tLUVORCBSU0EgUFJJVkFURSBLRVktLS0tLQo=
+#     name: karmada-apiserver
+# contexts:
+#   - context:
+#       cluster: karmada-apiserver
+#       user: karmada-apiserver
+#     name: karmada-apiserver
+# current-context: karmada-apiserver
+
+
+#########################################
+
+# # nginx-deployment.yaml
+# apiVersion: apps/v1
+# kind: Deployment
+# metadata:
+#   name: nginx
+#   namespace: default
+# spec:
+#   replicas: 1  # This will be overridden per cluster
+#   selector:
+#     matchLabels:
+#       app: nginx
+#   template:
+#     metadata:
+#       labels:
+#         app: nginx
+#     spec:
+#       containers:
+#       - name: nginx
+#         image: nginx:latest
+#         ports:
+#         - containerPort: 80
+
+############################################
+
+# openstack@network-deploy:~$ cat nginx-policy.yaml 
+# apiVersion: policy.karmada.io/v1alpha1
+# kind: PropagationPolicy
+# metadata:
+#   name: nginx-propagation
+#   namespace: default
+# spec:
+#   resourceSelectors:
+#     - apiVersion: apps/v1
+#       kind: Deployment
+#       name: nginx
+#   placement:
+#     clusterAffinity:
+#       clusterNames:
+#         - compute-cluster
+#         - storage-cluster
+#     replicaScheduling:
+#       replicaSchedulingType: Divided
+#       replicaDivisionPreference: Weighted
+#       weightPreference:
+#         staticWeightList:
+#           - targetCluster:
+#               clusterNames:
+#                 - compute-cluster
+#             weight: 3
+#           - targetCluster:
+#               clusterNames:
+#                 - storage-cluster
+#             weight: 4
+
+
+
+
+- sh
+- -c
+- xtables-set-mode.sh --mode legacy && kube-proxy --cluster-cidr=10.42.0.0/16 --conntrack-max-per-core=0 --conntrack-tcp-timeout-close-wait=0s --conntrack-tcp-timeout-established=0s --healthz-bind-address=127.0.0.1 --hostname-override=compute-ceph3 --kubeconfig=/var/lib/rancher/rke2/agent/kubeproxy.kubeconfig --proxy-mode=iptables
+
+# sudo nano /var/lib/rancher/rke2/agent/pod-manifests/kube-proxy.yaml
+# sudo systemctl restart rke2-agent
+
+
+# https://github.com/amirianfar/kubeflow-tutorial/blob/main/access_kfp_from_jupyter_notebook.yaml

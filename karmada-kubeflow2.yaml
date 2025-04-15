@@ -1,0 +1,210 @@
+
+---
+# Step 6: Now apply your Karmada configurations
+# Create a temporary file with the correct ResourceInterpreter configuration
+
+apiVersion: config.karmada.io/v1alpha1
+kind: ResourceInterpreterCustomization
+metadata:
+  name: pod-interpreter-for-argo
+spec:
+  target:
+    apiVersion: v1
+    kind: Pod
+  customizations:
+    replicaResource:
+      luaScript: |
+        function interpretReplicaResource(obj)
+          local labels = obj.metadata and obj.metadata.labels or {}
+          if labels["pipelines.kubeflow.org/pipeline-runtime"] then
+            return {
+              status = {
+                replicas = 1
+              }
+            }
+          end
+          return nil
+        end
+---
+# Step 7: Create cluster selectors
+apiVersion: policy.karmada.io/v1alpha1
+kind: ClusterPropagationPolicy
+metadata:
+  name: compute-cluster-selector
+spec:
+  resourceSelectors:
+    - apiVersion: v1
+      kind: Namespace
+      name: kubeflow
+  placement:
+    clusterAffinity:
+      labelSelector:
+        matchLabels:
+          location: compute-cluster
+---
+apiVersion: policy.karmada.io/v1alpha1
+kind: ClusterPropagationPolicy
+metadata:
+  name: storage-cluster-selector
+spec:
+  resourceSelectors:
+    - apiVersion: v1
+      kind: Namespace
+      name: kubeflow
+  placement:
+    clusterAffinity:
+      labelSelector:
+        matchLabels:
+          location: storage-cluster
+---          
+# Step 8: Create PropagationPolicies for workload distribution
+apiVersion: policy.karmada.io/v1alpha1
+kind: PropagationPolicy
+metadata:
+  name: kfp-small-jobs-policy
+  namespace: kubeflow
+spec:
+  resourceSelectors:
+    - apiVersion: v1
+      kind: Pod
+      labelSelector:
+        matchExpressions:
+          - key: pipelines.kubeflow.org/pipeline-runtime
+            operator: Exists
+          - key: resource-size
+            operator: In
+            values: ["small"]
+  placement:
+    clusterAffinity:
+      clusterNames:
+        - compute-cluster
+  priority: 2
+---
+apiVersion: policy.karmada.io/v1alpha1
+kind: PropagationPolicy
+metadata:
+  name: ml-jobs-to-storage-cluster
+  namespace: kubeflow
+spec:
+  resourceSelectors:
+    - apiVersion: v1
+      kind: Pod
+      labelSelector:
+        matchExpressions:
+          - key: workflows.argoproj.io/workflow
+            operator: Exists
+          - key: resource-size
+            operator: In
+            values: ["large"]
+  placement:
+    clusterAffinity:
+      clusterNames:
+        - storage-cluster
+  priority: 1
+---
+apiVersion: policy.karmada.io/v1alpha1
+kind: PropagationPolicy
+metadata:
+  name: parallel-jobs-distributed
+  namespace: kubeflow
+spec:
+  resourceSelectors:
+    - apiVersion: v1
+      kind: Pod
+      labelSelector:
+        matchExpressions:
+          - key: workflows.argoproj.io/workflow
+            operator: Exists
+          - key: parallel-task
+            operator: Exists
+  placement:
+    replicaScheduling:
+      replicaDivisionPreference: Weighted
+      replicaSchedulingType: Divided
+      weightPreference:
+        staticWeightList:
+          - targetCluster:
+              clusterNames:
+                - compute-cluster
+            weight: 10
+          - targetCluster:
+              clusterNames:
+                - storage-cluster  
+            weight: 90
+  priority: 3
+
+---
+apiVersion: policy.karmada.io/v1alpha1
+kind: PropagationPolicy
+metadata:
+  name: minio-secret-policy
+  namespace: kubeflow
+spec:
+  resourceSelectors:
+    - apiVersion: v1
+      kind: Secret
+      name: mlpipeline-minio-artifact
+  placement:
+    clusterAffinity:
+      clusterNames:
+        - compute-cluster
+        - storage-cluster
+---
+apiVersion: policy.karmada.io/v1alpha1
+kind: PropagationPolicy
+metadata:
+  name: kfp-artifacts-policy
+  namespace: kubeflow
+spec:
+  resourceSelectors:
+    - apiVersion: v1
+      kind: PersistentVolumeClaim
+      labelSelector:
+        matchExpressions:
+          - key: pipelines.kubeflow.org/pipeline-runtime
+            operator: Exists
+  placement:
+    clusterAffinity:
+      clusterNames:
+        - compute-cluster
+        - storage-cluster
+  priority: 1
+
+---
+apiVersion: policy.karmada.io/v1alpha1
+kind: OverridePolicy
+metadata:
+  name: kfp-artifact-override
+  namespace: kubeflow
+spec:
+  resourceSelectors:
+    - apiVersion: v1
+      kind: Pod
+      labelSelector:
+        matchExpressions:
+          - key: pipelines.kubeflow.org/pipeline-runtime
+            operator: Exists
+  overrideRules:
+    - overriders:
+        plaintext:
+          - path: /spec/containers/0/env/-
+            operator: add
+            value:
+              name: MINIO_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: mlpipeline-minio-artifact
+                  key: accesskey
+          - path: /spec/containers/0/env/-
+            operator: add
+            value:
+              name: MINIO_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: mlpipeline-minio-artifact
+                  key: secretkey
+          - path: /spec/containers/0/env/-
+            operator: add
+            value:
+              name: MINIO_ENDPOINT
+              value: "minio-service.kubeflow:9000"
