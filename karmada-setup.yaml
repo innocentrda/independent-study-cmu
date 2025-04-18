@@ -243,3 +243,31 @@ kubectl karmada join compute-cluster --kubeconfig=.kube/karmada-config --cluster
 kubectl karmada join storage-cluster --kubeconfig=.kube/karmada-config --cluster-kubeconfig=.kube/storage-config
 
 kubectl --kubeconfig=.kube/karmada-config get clusters
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: shared-pvc
+  namespace: default
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+  storageClassName: nfs-csi-default
+---
+apiVersion: policy.karmada.io/v1alpha1
+kind: PropagationPolicy
+metadata:
+  name: pvc-propagation
+  namespace: default
+spec:
+  resourceSelectors:
+    - apiVersion: v1
+      kind: PersistentVolumeClaim
+      name: shared-pvc
+  placement:
+    clusterAffinity:
+      clusterNames:
+        - compute-cluster
+        - storage-cluster

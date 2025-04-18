@@ -1,0 +1,41 @@
+apiVersion: kubeflow.org/v1
+kind: Notebook
+metadata:
+  annotations:
+    notebooks.kubeflow.org/creator: user@example.com
+    notebooks.kubeflow.org/server-type: jupyter
+  generation: 3
+  labels:
+    access-ml-pipeline: "true"
+    app: karmada-notebook
+  name: karmada-notebook
+  namespace: kubeflow-user-example-com
+spec:
+  template:
+    spec:
+      containers:
+      - env: []
+        image: ghcr.io/kubeflow/kubeflow/notebook-servers/jupyter-scipy:v1.10.0
+        resources:
+          limits:
+            cpu: "1"
+            memory: 2Gi
+          requests:
+            cpu: 100m
+            memory: 128Mi
+        imagePullPolicy: IfNotPresent
+        name: karmada-notebook
+        volumeMounts:
+        - mountPath: /dev/shm
+          name: dshm
+        - mountPath: /home/jovyan
+          name: karmada-notebook-workspace
+      serviceAccountName: default-editor
+      tolerations: []
+      volumes:
+      - emptyDir:
+          medium: Memory
+        name: dshm
+      - name: karmada-notebook-workspace
+        persistentVolumeClaim:
+          claimName: karmada-notebook-workspace
