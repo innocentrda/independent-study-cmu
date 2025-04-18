@@ -2,11 +2,19 @@
 
 set -e
 
+# NETWORK-CLUSTER
+CLUSTER_NAME="storage-cluster"
+
+# # NETWORK-CLUSTER
+# CLUSTER_NAME="compute-cluster"
+
+# # STORAGE-CLUSTER
+# CLUSTER_NAME="storage-cluster"
+
 # CONFIGURABLE VARIABLES
-CLUSTER_NAME="aws-cluster"
 REGION="eu-west-2"
 NODEGROUP_NAME="linux-nodes"
-NODE_TYPE="c5d.large"
+NODE_TYPE="c6i.2xlarge"
 NODE_COUNT=4
 SERVICE_ACCOUNT_NAME="ebs-csi-controller-sa"
 NAMESPACE="kube-system"

@@ -2,8 +2,10 @@
 
 set -e
 
+CLUSTER_NAME="network-cluster"
+
 # CONFIGURABLE VARIABLES
-CLUSTER_NAME="aws-cluster"
+# CLUSTER_NAME="aws-cluster"
 REGION="eu-west-2"
 SERVICE_ACCOUNT_NAME="ebs-csi-controller-sa"
 NAMESPACE="kube-system"
