@@ -3,7 +3,7 @@
 set -e
 
 # NETWORK-CLUSTER
-CLUSTER_NAME="storage-cluster"
+CLUSTER_NAME="aws-cluster"
 
 # # NETWORK-CLUSTER
 # CLUSTER_NAME="compute-cluster"
