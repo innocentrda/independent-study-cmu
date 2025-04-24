@@ -1,0 +1,259 @@
+
+
+openstack@compute-deploy:~$ kubectl get pod -n kubeflow
+NAME                                               READY   STATUS    RESTARTS        AGE
+cache-deployer-deployment-67b7ff8785-gnn6f         1/1     Running   0               24h
+cache-server-fb5bc88b7-knzsz                       1/1     Running   0               24h
+controller-manager-57488687d6-2tmcg                1/1     Running   0               24h
+metadata-envoy-deployment-7964b7b586-stfg6         1/1     Running   0               24h
+metadata-grpc-deployment-7c5f555568-gctc6          1/1     Running   0               24h
+metadata-writer-56675cdc8b-5tls2                   1/1     Running   2 (3h26m ago)   24h
+minio-56c4c7d5b8-6lvs7                             1/1     Running   0               24h
+ml-pipeline-74bbf4d5c-wvk24                        1/1     Running   1 (24h ago)     24h
+ml-pipeline-persistenceagent-68b6c7fddf-p8jnb      1/1     Running   3 (24h ago)     24h
+ml-pipeline-scheduledworkflow-7f8667b76b-cmctm     1/1     Running   0               24h
+ml-pipeline-ui-649594d7f4-8rjg2                    1/1     Running   0               24h
+ml-pipeline-viewer-crd-79d4555d8f-9qtpn            1/1     Running   0               24h
+ml-pipeline-visualizationserver-6b9c885665-h47f8   1/1     Running   0               24h
+mysql-75d57bbfbf-7hndd                             1/1     Running   0               24h
+workflow-controller-58dc659758-rzdtm               1/1     Running   0               24h
+openstack@compute-deploy:~$ kubectl get deploy -n kubeflow
+NAME                              READY   UP-TO-DATE   AVAILABLE   AGE
+cache-deployer-deployment         1/1     1            1           24h
+cache-server                      1/1     1            1           24h
+controller-manager                1/1     1            1           24h
+metadata-envoy-deployment         1/1     1            1           24h
+metadata-grpc-deployment          1/1     1            1           24h
+metadata-writer                   1/1     1            1           24h
+minio                             1/1     1            1           24h
+ml-pipeline                       1/1     1            1           24h
+ml-pipeline-persistenceagent      1/1     1            1           24h
+ml-pipeline-scheduledworkflow     1/1     1            1           24h
+ml-pipeline-ui                    1/1     1            1           24h
+ml-pipeline-viewer-crd            1/1     1            1           24h
+ml-pipeline-visualizationserver   1/1     1            1           24h
+mysql                             1/1     1            1           24h
+workflow-controller               1/1     1            1           24h
+openstack@compute-deploy:~$ kubectl get sts -n kubeflow
+No resources found in kubeflow namespace.
+openstack@compute-deploy:~$ kubectl get ds -n kubeflow
+No resources found in kubeflow namespace.
+openstack@compute-deploy:~$ kubectl get secret -n kubeflow
+NAME                        TYPE     DATA   AGE
+mlpipeline-minio-artifact   Opaque   2      24h
+mysql-secret                Opaque   2      24h
+webhook-server-tls          Opaque   2      24h
+openstack@compute-deploy:~$ kubectl get cm -n kubeflow
+NAME                            DATA   AGE
+kfp-launcher                    1      24h
+kube-root-ca.crt                1      24h
+metadata-grpc-configmap         2      24h
+ml-pipeline-ui-configmap        1      24h
+pipeline-install-config         21     24h
+workflow-controller-configmap   2      24h
+openstack@compute-deploy:~$ kubectl get pvc -n kubeflow
+NAME             STATUS   VOLUME                                     CAPACITY   ACCESS MODES   STORAGECLASS      VOLUMEATTRIBUTESCLASS   AGE
+minio-pvc        Bound    pvc-be8df134-bd75-4116-8305-97501d89a405   10Gi       RWO            nfs-csi-default   <unset>                 24h
+mysql-pv-claim   Bound    pvc-9e068ae8-d7a2-45be-baf0-3f546c931bf9   20Gi       RWO            nfs-csi-default   <unset>                 24h
+openstack@compute-deploy:~$ kubectl get svc -n kubeflow
+NAME                              TYPE           CLUSTER-IP      EXTERNAL-IP   PORT(S)                         AGE
+cache-server                      ClusterIP      10.43.226.126   <none>        443/TCP                         24h
+controller-manager-service        ClusterIP      10.43.236.31    <none>        443/TCP                         24h
+metadata-envoy-service            ClusterIP      10.43.73.241    <none>        9090/TCP                        24h
+metadata-grpc-service             ClusterIP      10.43.83.136    <none>        8080/TCP                        24h
+minio-service                     ClusterIP      10.43.69.82     <none>        9000/TCP                        24h
+ml-pipeline                       LoadBalancer   10.43.162.29    10.10.10.71   8888:31707/TCP,8887:31210/TCP   24h
+ml-pipeline-ui                    LoadBalancer   10.43.199.188   10.10.10.70   80:30987/TCP                    24h
+ml-pipeline-visualizationserver   ClusterIP      10.43.33.69     <none>        8888/TCP                        24h
+mysql                             ClusterIP      10.43.152.70    <none>        3306/TCP                        24h
+openstack@compute-deploy:~$ kubectl get crd | grep argo
+clusterworkflowtemplates.argoproj.io                              2025-04-21T08:34:31Z
+cronworkflows.argoproj.io                                         2025-04-21T08:34:32Z
+workflowartifactgctasks.argoproj.io                               2025-04-21T08:34:33Z
+workfloweventbindings.argoproj.io                                 2025-04-21T08:34:34Z
+workflows.argoproj.io                                             2025-04-21T08:34:34Z
+workflowtaskresults.argoproj.io                                   2025-04-21T08:34:35Z
+workflowtasksets.argoproj.io                                      2025-04-21T08:34:35Z
+workflowtemplates.argoproj.io                                     2025-04-21T08:34:35Z
+openstack@compute-deploy:~$ kubectl get crd | grep workflow
+clusterworkflowtemplates.argoproj.io                              2025-04-21T08:34:31Z
+cronworkflows.argoproj.io                                         2025-04-21T08:34:32Z
+scheduledworkflows.kubeflow.org                                   2025-04-21T08:34:32Z
+workflowartifactgctasks.argoproj.io                               2025-04-21T08:34:33Z
+workfloweventbindings.argoproj.io                                 2025-04-21T08:34:34Z
+workflows.argoproj.io                                             2025-04-21T08:34:34Z
+workflowtaskresults.argoproj.io                                   2025-04-21T08:34:35Z
+workflowtasksets.argoproj.io                                      2025-04-21T08:34:35Z
+workflowtemplates.argoproj.io                                     2025-04-21T08:34:35Z
+
+
+
+
+==============================================================================
+
+
+
+
+
+docker run -p 8888:8888 -e JUPYTER_TOKEN='' --user root -v "$HOME/jupyter-notebooks":/home/jovyan/work -d jupyter/tensorflow-notebook
+
+
+As you can see on the screenshots, I deployed kubeflow pipelines on compute-cluster and I run the pipeline successfully on cmpute-cluster. I also deployed karmada and it has both compute-cluster and storage-cluster as members. I federated nginx deployment and it works fine according to the policy i defined where some pods are schedlued on compute-cluster and others on storage-cluster:
+
+# nginx-deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx
+  namespace: default
+spec:
+  replicas: 1  # This will be overridden per cluster
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:latest
+        ports:
+        - containerPort: 80
+---
+apiVersion: policy.karmada.io/v1alpha1
+kind: PropagationPolicy
+metadata:
+  name: nginx-propagation
+  namespace: default
+spec:
+  resourceSelectors:
+    - apiVersion: apps/v1
+      kind: Deployment
+      name: nginx
+  placement:
+    clusterAffinity:
+      clusterNames:
+        - compute-cluster
+        - storage-cluster
+    replicaScheduling:
+      replicaSchedulingType: Divided
+      replicaDivisionPreference: Weighted
+      weightPreference:
+        staticWeightList:
+          - targetCluster:
+              clusterNames:
+                - compute-cluster
+            weight: 3
+          - targetCluster:
+              clusterNames:
+                - storage-cluster
+            weight: 4
+
+kubectl --kubeconfig=.kube/karmada-config apply -f nginx-federated.yaml
+
+As you can see both nginx deployment and the policy are submitted to the karmada controlplane. By default Deployment object is available in 3 clusters. For kubeflow pipelines, some objects such workflows and other CRDs are not available by default in all clusters.
+
+Now I want to achieve the same with kubeflow pipelines tasks. I want some tasks to be scheduled on compute-cluster and others on storage-cluster.  Please give me detailed steps and the necessary code to achieve this. Tell me what should be deployed on each cluster as well to make propagation work.
+
+Again based on the nginx example I shared, karmada propagates only resources which were submitted to  karmada contolplane. In the attached pipeline, I submitted the pipeline to kfp deployed in compute-cluster. not sure how it should be done in the case of karmada which should distribute the task to both clusters.
+
+Basically these are the resources deployed in compute-cluster using:
+
+
+
+
+openstack@compute-deploy:~$ kubectl get pod -n kubeflow
+NAME                                               READY   STATUS    RESTARTS        AGE
+cache-deployer-deployment-67b7ff8785-gnn6f         1/1     Running   0               24h
+cache-server-fb5bc88b7-knzsz                       1/1     Running   0               24h
+controller-manager-57488687d6-2tmcg                1/1     Running   0               24h
+metadata-envoy-deployment-7964b7b586-stfg6         1/1     Running   0               24h
+metadata-grpc-deployment-7c5f555568-gctc6          1/1     Running   0               24h
+metadata-writer-56675cdc8b-5tls2                   1/1     Running   2 (3h26m ago)   24h
+minio-56c4c7d5b8-6lvs7                             1/1     Running   0               24h
+ml-pipeline-74bbf4d5c-wvk24                        1/1     Running   1 (24h ago)     24h
+ml-pipeline-persistenceagent-68b6c7fddf-p8jnb      1/1     Running   3 (24h ago)     24h
+ml-pipeline-scheduledworkflow-7f8667b76b-cmctm     1/1     Running   0               24h
+ml-pipeline-ui-649594d7f4-8rjg2                    1/1     Running   0               24h
+ml-pipeline-viewer-crd-79d4555d8f-9qtpn            1/1     Running   0               24h
+ml-pipeline-visualizationserver-6b9c885665-h47f8   1/1     Running   0               24h
+mysql-75d57bbfbf-7hndd                             1/1     Running   0               24h
+workflow-controller-58dc659758-rzdtm               1/1     Running   0               24h
+openstack@compute-deploy:~$ kubectl get deploy -n kubeflow
+NAME                              READY   UP-TO-DATE   AVAILABLE   AGE
+cache-deployer-deployment         1/1     1            1           24h
+cache-server                      1/1     1            1           24h
+controller-manager                1/1     1            1           24h
+metadata-envoy-deployment         1/1     1            1           24h
+metadata-grpc-deployment          1/1     1            1           24h
+metadata-writer                   1/1     1            1           24h
+minio                             1/1     1            1           24h
+ml-pipeline                       1/1     1            1           24h
+ml-pipeline-persistenceagent      1/1     1            1           24h
+ml-pipeline-scheduledworkflow     1/1     1            1           24h
+ml-pipeline-ui                    1/1     1            1           24h
+ml-pipeline-viewer-crd            1/1     1            1           24h
+ml-pipeline-visualizationserver   1/1     1            1           24h
+mysql                             1/1     1            1           24h
+workflow-controller               1/1     1            1           24h
+openstack@compute-deploy:~$ kubectl get sts -n kubeflow
+No resources found in kubeflow namespace.
+openstack@compute-deploy:~$ kubectl get ds -n kubeflow
+No resources found in kubeflow namespace.
+openstack@compute-deploy:~$ kubectl get secret -n kubeflow
+NAME                        TYPE     DATA   AGE
+mlpipeline-minio-artifact   Opaque   2      24h
+mysql-secret                Opaque   2      24h
+webhook-server-tls          Opaque   2      24h
+openstack@compute-deploy:~$ kubectl get cm -n kubeflow
+NAME                            DATA   AGE
+kfp-launcher                    1      24h
+kube-root-ca.crt                1      24h
+metadata-grpc-configmap         2      24h
+ml-pipeline-ui-configmap        1      24h
+pipeline-install-config         21     24h
+workflow-controller-configmap   2      24h
+openstack@compute-deploy:~$ kubectl get pvc -n kubeflow
+NAME             STATUS   VOLUME                                     CAPACITY   ACCESS MODES   STORAGECLASS      VOLUMEATTRIBUTESCLASS   AGE
+minio-pvc        Bound    pvc-be8df134-bd75-4116-8305-97501d89a405   10Gi       RWO            nfs-csi-default   <unset>                 24h
+mysql-pv-claim   Bound    pvc-9e068ae8-d7a2-45be-baf0-3f546c931bf9   20Gi       RWO            nfs-csi-default   <unset>                 24h
+openstack@compute-deploy:~$ kubectl get svc -n kubeflow
+NAME                              TYPE           CLUSTER-IP      EXTERNAL-IP   PORT(S)                         AGE
+cache-server                      ClusterIP      10.43.226.126   <none>        443/TCP                         24h
+controller-manager-service        ClusterIP      10.43.236.31    <none>        443/TCP                         24h
+metadata-envoy-service            ClusterIP      10.43.73.241    <none>        9090/TCP                        24h
+metadata-grpc-service             ClusterIP      10.43.83.136    <none>        8080/TCP                        24h
+minio-service                     ClusterIP      10.43.69.82     <none>        9000/TCP                        24h
+ml-pipeline                       LoadBalancer   10.43.162.29    10.10.10.71   8888:31707/TCP,8887:31210/TCP   24h
+ml-pipeline-ui                    LoadBalancer   10.43.199.188   10.10.10.70   80:30987/TCP                    24h
+ml-pipeline-visualizationserver   ClusterIP      10.43.33.69     <none>        8888/TCP                        24h
+mysql                             ClusterIP      10.43.152.70    <none>        3306/TCP                        24h
+openstack@compute-deploy:~$ kubectl get crd | grep argo
+clusterworkflowtemplates.argoproj.io                              2025-04-21T08:34:31Z
+cronworkflows.argoproj.io                                         2025-04-21T08:34:32Z
+workflowartifactgctasks.argoproj.io                               2025-04-21T08:34:33Z
+workfloweventbindings.argoproj.io                                 2025-04-21T08:34:34Z
+workflows.argoproj.io                                             2025-04-21T08:34:34Z
+workflowtaskresults.argoproj.io                                   2025-04-21T08:34:35Z
+workflowtasksets.argoproj.io                                      2025-04-21T08:34:35Z
+workflowtemplates.argoproj.io                                     2025-04-21T08:34:35Z
+openstack@compute-deploy:~$ kubectl get crd | grep workflow
+clusterworkflowtemplates.argoproj.io                              2025-04-21T08:34:31Z
+cronworkflows.argoproj.io                                         2025-04-21T08:34:32Z
+scheduledworkflows.kubeflow.org                                   2025-04-21T08:34:32Z
+workflowartifactgctasks.argoproj.io                               2025-04-21T08:34:33Z
+workfloweventbindings.argoproj.io                                 2025-04-21T08:34:34Z
+workflows.argoproj.io                                             2025-04-21T08:34:34Z
+workflowtaskresults.argoproj.io                                   2025-04-21T08:34:35Z
+workflowtasksets.argoproj.io                                      2025-04-21T08:34:35Z
+workflowtemplates.argoproj.io                                     2025-04-21T08:34:35Z
+
+export PIPELINE_VERSION=karmada
+kubectl apply -k "github.com/innocentrda/pipelines/manifests/kustomize/cluster-scoped-resources?ref=$PIPELINE_VERSION"
+kubectl wait --for condition=established --timeout=60s crd/applications.app.k8s.io
+kubectl apply -k "github.com/innocentrda/pipelines/manifests/kustomize/env/dev?ref=$PIPELINE_VERSION"
+
+
+The default storageclass in all clusters use the same nfs-server but how services from storage-cluster will use the minio and mysql from compute-cluster. Be specific show me what should be deployed on storage-cluster and on karmada controlplane and how to deploy them. 
