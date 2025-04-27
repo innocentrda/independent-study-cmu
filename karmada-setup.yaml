@@ -73,7 +73,7 @@ clusters:
 users:
 - name: "storage-cluster"
   user:
-    token: "eyJhbGciOiJSUzI1NiIsImtpZCI6IjFRaTI1U1BiaTBEaWM1eGVub3paMWVacW9IelJmZDR4NVZhdHEtWHE3dkEifQ.eyJpc3MiOiJrdWJlcm5ldGVzL3NlcnZpY2VhY2NvdW50Iiwia3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9uYW1lc3BhY2UiOiJrYXJtYWRhLXN5c3RlbSIsImt1YmVybmV0ZXMuaW8vc2VydmljZWFjY291bnQvc2VjcmV0Lm5hbWUiOiJrYXJtYWRhLWFjY2Vzcy10b2tlbiIsImt1YmVybmV0ZXMuaW8vc2VydmljZWFjY291bnQvc2VydmljZS1hY2NvdW50Lm5hbWUiOiJrYXJtYWRhLWFjY2VzcyIsImt1YmVybmV0ZXMuaW8vc2VydmljZWFjY291bnQvc2VydmljZS1hY2NvdW50LnVpZCI6IjU3ZTQxZWQzLTRmZDUtNDQ5MC1iZGVhLTljZjMzM2I4YjVmMiIsInN1YiI6InN5c3RlbTpzZXJ2aWNlYWNjb3VudDprYXJtYWRhLXN5c3RlbTprYXJtYWRhLWFjY2VzcyJ9.gAa_HwQmKI84FHZ7nb50-yd2Xa6OO9u_F2CqpvOhinvRb6PcSzCxMhkv2t-iK_p3r3xGJiYPWP1JSdLU9STIKyq7aXOVZnv8g6Dodu4tWrxpack5IDHMcPz_QBlKJau1Vx1pzQziqoZWMQ8ZbC6g0Bc-h63r_IcCVx-yrsuu8JekLudHBCVJ65ORctI4IuIASK1MFn-Ept81PF1zSzcfPoEFWrW9193beQoTEThkjfjcnYd4y1mg1pG3cVUDMsWv8lFz7QKRZYRCoyOMX9Z4R4dcjlZMIAsUA_lPJrsxzG-3Hcs8t_PJemghpPapV-FnLPhpKwEIWhuXxG_OZimGHQ"
+    token: "eyJhbGciOiJSUzI1NiIsImtpZCI6Ii1Hc2FkRkJYdmJQbzFWTl8yUVRpNExnenBRQVA3ajJNNnNLbUtWbmx6am8ifQ.eyJpc3MiOiJrdWJlcm5ldGVzL3NlcnZpY2VhY2NvdW50Iiwia3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9uYW1lc3BhY2UiOiJrYXJtYWRhLXN5c3RlbSIsImt1YmVybmV0ZXMuaW8vc2VydmljZWFjY291bnQvc2VjcmV0Lm5hbWUiOiJrYXJtYWRhLWFjY2Vzcy10b2tlbiIsImt1YmVybmV0ZXMuaW8vc2VydmljZWFjY291bnQvc2VydmljZS1hY2NvdW50Lm5hbWUiOiJrYXJtYWRhLWFjY2VzcyIsImt1YmVybmV0ZXMuaW8vc2VydmljZWFjY291bnQvc2VydmljZS1hY2NvdW50LnVpZCI6IjE3YjE2NTlhLTQ3NjItNDg1Ny1hN2VlLWQxYTkzZjcwOTBkYiIsInN1YiI6InN5c3RlbTpzZXJ2aWNlYWNjb3VudDprYXJtYWRhLXN5c3RlbTprYXJtYWRhLWFjY2VzcyJ9.Xr32I3C6qgm10DG5rS8dp63JohZLd4mPY9HSALlfVRMMpgiOU5nIaWF88hur0PgdeB6B9zZCs2ckkqTdhZXHXeOsj_sjCvv_ONDW96R5i-mfeY0ZdYpoJXIjpnT7YCFkAQSWR5jtT3Xaodru30OpANxOF8vm04KJ4xlgMbgUn9i6k7n7NWqEzOlEQkHGkwyKaoYXYrfOjE9HvCMdofwfA9nCrPb2o7B6Rs6Svq5jOvA23p-PkAkOHvdbdMRa32n71JvL4feLL5YB3KhFOCQl8-EQbuaGfyEABKRmuQBctjeJltq4SVoH645GUueqfaCm5vO7bch0Z2ljS5yHLni2ig"
 contexts:
 - name: "storage-cluster"
   context:
@@ -247,7 +247,16 @@ spec:
         - storage-cluster
 
 
+
+
 export PIPELINE_VERSION=karmada
-kubectl apply -k "github.com/innocentrda/pipelines/manifests/kustomize/cluster-scoped-resources?ref=$PIPELINE_VERSION"
+while ! kubectl apply -k "github.com/innocentrda/pipelines/manifests/kustomize/cluster-scoped-resources?ref=$PIPELINE_VERSION"; do   echo "Retrying apply...";   sleep 5; done
 kubectl wait --for condition=established --timeout=60s crd/applications.app.k8s.io
-kubectl apply -k "github.com/innocentrda/pipelines/manifests/kustomize/env/dev?ref=$PIPELINE_VERSION"
+while ! kubectl apply -k "github.com/innocentrda/pipelines/manifests/kustomize/env/dev?ref=$PIPELINE_VERSION"; do   echo "Retrying apply...";   sleep 5; done
+
+
+
+export PIPELINE_VERSION=karmada
+while ! kubectl --kubeconfig=.kube/karmada-config apply -k "github.com/innocentrda/pipelines/manifests/kustomize/cluster-scoped-resources?ref=$PIPELINE_VERSION"; do   echo "Retrying apply...";   sleep 5; done
+kubectl --kubeconfig=.kube/karmada-config wait --for condition=established --timeout=60s crd/applications.app.k8s.io
+while ! kubectl --kubeconfig=.kube/karmada-config apply -k "github.com/innocentrda/pipelines/manifests/kustomize/env/dev?ref=$PIPELINE_VERSION"; do   echo "Retrying apply...";   sleep 5; done

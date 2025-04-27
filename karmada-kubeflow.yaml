@@ -1,79 +1,182 @@
-# Step 3: Create a ResourceInterpreter for Kubeflow job pods
-
-apiVersion: config.karmada.io/v1alpha1
-kind: ResourceInterpreterCustomization
-metadata:
-  name: pod-interpreter-for-argo
-spec:
-  target:
-    apiVersion: v1
-    kind: Pod
-  customization:
-    # Only interpret pods created by Argo Workflow (Kubeflow uses these)
-    interpreterRules:
-      replicaResource:
-        jsonPath: ".metadata.labels"
-        byPaths:
-        - path: ".workflow"
-        - path: ".workflows\\.argoproj\\.io/workflow"
-
-# ---
-# # Step 4: Label both clusters
-kubectl --kubeconfig=.kube/karmada-config label cluster compute-cluster location=compute-cluster gpu=low
-kubectl --kubeconfig=.kube/karmada-config label cluster storage-cluster location=storage-cluster gpu=high
----
-# Step 5: Create cluster selectors
-
-apiVersion: cluster.karmada.io/v1alpha1
-kind: ClusterSelector
-metadata:
-  name: compute-cluster-selector
-spec:
-  labelSelector:
-    matchLabels:
-      location: compute-cluster
----
-apiVersion: cluster.karmada.io/v1alpha1
-kind: ClusterSelector
-metadata:
-  name: storage-cluster-selector
-spec:
-  labelSelector:
-    matchLabels:
-      location: storage-cluster
-
----
-# Step 6: Create PropagationPolicy for small jobs (to stay compute-cluster)
-
 apiVersion: policy.karmada.io/v1alpha1
 kind: PropagationPolicy
 metadata:
-  name: small-jobs-compute-cluster
+  name: kubeflow-all-compute
   namespace: kubeflow
 spec:
   resourceSelectors:
+    # Namespace
     - apiVersion: v1
-      kind: Pod
-      labelSelector:
-        matchExpressions:
-          - key: workflows.argoproj.io/workflow
-            operator: Exists
-          - key: resource-size
-            operator: In
-            values: ["small"]
+      kind: Namespace
+      name: kubeflow
+
+    # CRDs
+    - apiVersion: apiextensions.k8s.io/v1
+      kind: CustomResourceDefinition
+      name: applications.app.k8s.io
+    - apiVersion: apiextensions.k8s.io/v1
+      kind: CustomResourceDefinition
+      name: clusterworkflowtemplates.argoproj.io
+    - apiVersion: apiextensions.k8s.io/v1
+      kind: CustomResourceDefinition
+      name: cronworkflows.argoproj.io
+    - apiVersion: apiextensions.k8s.io/v1
+      kind: CustomResourceDefinition
+      name: scheduledworkflows.kubeflow.org
+    - apiVersion: apiextensions.k8s.io/v1
+      kind: CustomResourceDefinition
+      name: viewers.kubeflow.org
+    - apiVersion: apiextensions.k8s.io/v1
+      kind: CustomResourceDefinition
+      name: workflowartifactgctasks.argoproj.io
+    - apiVersion: apiextensions.k8s.io/v1
+      kind: CustomResourceDefinition
+      name: workfloweventbindings.argoproj.io
+    - apiVersion: apiextensions.k8s.io/v1
+      kind: CustomResourceDefinition
+      name: workflows.argoproj.io
+    - apiVersion: apiextensions.k8s.io/v1
+      kind: CustomResourceDefinition
+      name: workflowtaskresults.argoproj.io
+    - apiVersion: apiextensions.k8s.io/v1
+      kind: CustomResourceDefinition
+      name: workflowtasksets.argoproj.io
+    - apiVersion: apiextensions.k8s.io/v1
+      kind: CustomResourceDefinition
+      name: workflowtemplates.argoproj.io
+
+    # ClusterRoles and ClusterRoleBindings
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRole
+      name: kubeflow-pipelines-cache-deployer-clusterrole
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRoleBinding
+      name: kubeflow-pipelines-cache-deployer-clusterrolebinding
+
+    # ServiceAccounts
+    - apiVersion: v1
+      kind: ServiceAccount
+      namespace: kubeflow
+      name: application
+    - apiVersion: v1
+      kind: ServiceAccount
+      namespace: kubeflow
+      name: argo
+    - apiVersion: v1
+      kind: ServiceAccount
+      namespace: kubeflow
+      name: kubeflow-pipelines-cache
+    - apiVersion: v1
+      kind: ServiceAccount
+      namespace: kubeflow
+      name: kubeflow-pipelines-container-builder
+    - apiVersion: v1
+      kind: ServiceAccount
+      namespace: kubeflow
+      name: kubeflow-pipelines-metadata-writer
+    - apiVersion: v1
+      kind: ServiceAccount
+      namespace: kubeflow
+      name: kubeflow-pipelines-viewer
+    - apiVersion: v1
+      kind: ServiceAccount
+      namespace: kubeflow
+      name: metadata-grpc-server
+    - apiVersion: v1
+      kind: ServiceAccount
+      namespace: kubeflow
+      name: ml-pipeline
+    - apiVersion: v1
+      kind: ServiceAccount
+      namespace: kubeflow
+      name: ml-pipeline-persistenceagent
+    - apiVersion: v1
+      kind: ServiceAccount
+      namespace: kubeflow
+      name: ml-pipeline-scheduledworkflow
+    - apiVersion: v1
+      kind: ServiceAccount
+      namespace: kubeflow
+      name: ml-pipeline-ui
+    - apiVersion: v1
+      kind: ServiceAccount
+      namespace: kubeflow
+      name: ml-pipeline-viewer-crd-service-account
+    - apiVersion: v1
+      kind: ServiceAccount
+      namespace: kubeflow
+      name: ml-pipeline-visualizationserver
+    - apiVersion: v1
+      kind: ServiceAccount
+      namespace: kubeflow
+      name: mysql
+    - apiVersion: v1
+      kind: ServiceAccount
+      namespace: kubeflow
+      name: pipeline-runner
+
+    # Roles and RoleBindings
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: Role
+      namespace: kubeflow
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: RoleBinding
+      namespace: kubeflow
+
+    # ConfigMaps
+    - apiVersion: v1
+      kind: ConfigMap
+      namespace: kubeflow
+    # (you can be more specific if needed)
+
+    # MutatingWebhookConfiguration
+    - apiVersion: v1
+      kind: MutatingWebhookConfiguration
+
+    # Secrets
+    - apiVersion: v1
+      kind: Secret
+      namespace: kubeflow
+
+    # PVCs
+    - apiVersion: v1
+      kind: PersistentVolumeClaim
+      namespace: kubeflow
+
+    # Services
+    - apiVersion: v1
+      kind: Service
+      namespace: kubeflow
+
+    # Deployments
+    - apiVersion: apps/v1
+      kind: Deployment
+      namespace: kubeflow
+
+    # PriorityClass
+    - apiVersion: scheduling.k8s.io/v1
+      kind: PriorityClass
+      name: workflow-controller
+
+    # Application
+    - apiVersion: app.k8s.io/v1beta1
+      kind: Application
+      namespace: kubeflow
+      name: pipeline
+
   placement:
     clusterAffinity:
       clusterNames:
         - compute-cluster
-  priority: 2
+
+
 
 ---
-# Step 7: Create PropagationPolicy for GPU-intensive jobs (to go to storage-cluster)
 
 apiVersion: policy.karmada.io/v1alpha1
 kind: PropagationPolicy
 metadata:
-  name: ml-jobs-to-storage-cluster
+  name: argo-workflow-pods
   namespace: kubeflow
 spec:
   resourceSelectors:
@@ -83,22 +186,17 @@ spec:
         matchExpressions:
           - key: workflows.argoproj.io/workflow
             operator: Exists
-          - key: resource-size
-            operator: In
-            values: ["large"]
   placement:
     clusterAffinity:
       clusterNames:
+        - compute-cluster
         - storage-cluster
-  priority: 1
-
 ---
-# Step 8: Create PropagationPolicy for parallel jobs (to be distributed)
 
 apiVersion: policy.karmada.io/v1alpha1
-kind: PropagationPolicy
+kind: OverridePolicy
 metadata:
-  name: parallel-jobs-distributed
+  name: workflow-pod-targeting
   namespace: kubeflow
 spec:
   resourceSelectors:
@@ -108,20 +206,112 @@ spec:
         matchExpressions:
           - key: workflows.argoproj.io/workflow
             operator: Exists
-          - key: parallel-task
-            operator: Exists
-  placement:
-    replicaScheduling:
-      replicaDivisionPreference: Weighted
-      replicaSchedulingType: Divided
-      weightPreference:
-        staticWeightList:
-          - targetCluster:
-              clusterNames:
-                - compute-cluster
-            weight: 10
-          - targetCluster:
-              clusterNames:
-                - storage-cluster  
-            weight: 90
-  priority: 3
+  overrideRules:
+    - targetCluster:
+        clusterNames:
+          - storage-cluster
+      overriders:
+        plaintext:
+          - path: "/spec/affinity/nodeAffinity/requiredDuringSchedulingIgnoredDuringExecution/nodeSelectorTerms"
+            op: replace
+            value:
+              - matchExpressions:
+                  - key: "cluster-target"
+                    operator: "In"
+                    values:
+                      - "storage"
+    - targetCluster:
+        clusterNames:
+          - compute-cluster
+      overriders:
+        plaintext:
+          - path: "/spec/affinity/nodeAffinity/requiredDuringSchedulingIgnoredDuringExecution/nodeSelectorTerms"
+            op: replace
+            value:
+              - matchExpressions:
+                  - key: "cluster-target"
+                    operator: "In"
+                    values:
+                      - "compute"
+
+
+# ---
+
+# apiVersion: policy.karmada.io/v1alpha1
+# kind: PropagationPolicy
+# metadata:
+#   name: kubeflow-rbac-propagation
+#   namespace: kubeflow
+# spec:
+#   resourceSelectors:
+#     - apiVersion: v1
+#       kind: ServiceAccount
+#     - apiVersion: rbac.authorization.k8s.io/v1
+#       kind: Role
+#     - apiVersion: rbac.authorization.k8s.io/v1
+#       kind: RoleBinding
+#   placement:
+#     clusterAffinity:
+#       clusterNames:
+#         - compute-cluster
+#         - storage-cluster
+
+# ---
+
+# apiVersion: policy.karmada.io/v1alpha1
+# kind: PropagationPolicy
+# metadata:
+#   name: argo-workflow-pods
+#   namespace: kubeflow
+# spec:
+#   resourceSelectors:
+#     - apiVersion: v1
+#       kind: Pod
+#       labelSelector:
+#         matchExpressions:
+#           - key: workflows.argoproj.io/workflow
+#             operator: Exists
+#   placement:
+#     clusterAffinity:
+#       clusterNames:
+#         - compute-cluster
+#         - storage-cluster
+
+# ---
+
+# apiVersion: policy.karmada.io/v1alpha1
+# kind: OverridePolicy
+# metadata:
+#   name: workflow-pod-targeting
+#   namespace: kubeflow
+# spec:
+#   resourceSelectors:
+#     - apiVersion: v1
+#       kind: Pod
+#       labelSelector:
+#         matchExpressions:
+#           - key: workflows.argoproj.io/workflow
+#             operator: Exists
+#   overrideRules:
+#     - targetCluster:
+#         clusterNames:
+#           - storage-cluster
+#       overriders:
+#         plaintext:
+#           - path: "/spec/affinity/nodeAffinity/requiredDuringSchedulingIgnoredDuringExecution/nodeSelectorTerms/0/matchExpressions/0"
+#             op: add
+#             value:
+#               key: "cluster-target"
+#               operator: "In"
+#               values: ["storage"]
+#     - targetCluster:
+#         clusterNames:
+#           - compute-cluster
+#       overriders:
+#         plaintext:
+#           - path: "/spec/affinity/nodeAffinity/requiredDuringSchedulingIgnoredDuringExecution/nodeSelectorTerms/0/matchExpressions/0"
+#             op: add
+#             value:
+#               key: "cluster-target"
+#               operator: "In"
+#               values: ["compute"]
