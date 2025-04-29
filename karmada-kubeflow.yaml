@@ -133,6 +133,10 @@ spec:
     - apiVersion: v1
       kind: MutatingWebhookConfiguration
 
+    # PriorityClass
+    - apiVersion: scheduling.k8s.io/v1
+      kind: PriorityClass
+
     # Secrets
     - apiVersion: v1
       kind: Secret
@@ -154,9 +158,9 @@ spec:
       namespace: kubeflow
 
     # PriorityClass
-    - apiVersion: scheduling.k8s.io/v1
-      kind: PriorityClass
-      name: workflow-controller
+    # - apiVersion: scheduling.k8s.io/v1
+    #   kind: PriorityClass
+    #   name: workflow-controller
 
     # Application
     - apiVersion: app.k8s.io/v1beta1
@@ -171,71 +175,71 @@ spec:
 
 
 
----
-
-apiVersion: policy.karmada.io/v1alpha1
-kind: PropagationPolicy
-metadata:
-  name: argo-workflow-pods
-  namespace: kubeflow
-spec:
-  resourceSelectors:
-    - apiVersion: v1
-      kind: Pod
-      labelSelector:
-        matchExpressions:
-          - key: workflows.argoproj.io/workflow
-            operator: Exists
-  placement:
-    clusterAffinity:
-      clusterNames:
-        - compute-cluster
-        - storage-cluster
----
-
-apiVersion: policy.karmada.io/v1alpha1
-kind: OverridePolicy
-metadata:
-  name: workflow-pod-targeting
-  namespace: kubeflow
-spec:
-  resourceSelectors:
-    - apiVersion: v1
-      kind: Pod
-      labelSelector:
-        matchExpressions:
-          - key: workflows.argoproj.io/workflow
-            operator: Exists
-  overrideRules:
-    - targetCluster:
-        clusterNames:
-          - storage-cluster
-      overriders:
-        plaintext:
-          - path: "/spec/affinity/nodeAffinity/requiredDuringSchedulingIgnoredDuringExecution/nodeSelectorTerms"
-            op: replace
-            value:
-              - matchExpressions:
-                  - key: "cluster-target"
-                    operator: "In"
-                    values:
-                      - "storage"
-    - targetCluster:
-        clusterNames:
-          - compute-cluster
-      overriders:
-        plaintext:
-          - path: "/spec/affinity/nodeAffinity/requiredDuringSchedulingIgnoredDuringExecution/nodeSelectorTerms"
-            op: replace
-            value:
-              - matchExpressions:
-                  - key: "cluster-target"
-                    operator: "In"
-                    values:
-                      - "compute"
-
-
 # ---
+
+# apiVersion: policy.karmada.io/v1alpha1
+# kind: PropagationPolicy
+# metadata:
+#   name: argo-workflow-pods
+#   namespace: kubeflow
+# spec:
+#   resourceSelectors:
+#     - apiVersion: v1
+#       kind: Pod
+#       labelSelector:
+#         matchExpressions:
+#           - key: workflows.argoproj.io/workflow
+#             operator: Exists
+#   placement:
+#     clusterAffinity:
+#       clusterNames:
+#         - compute-cluster
+#         - storage-cluster
+# ---
+
+# apiVersion: policy.karmada.io/v1alpha1
+# kind: OverridePolicy
+# metadata:
+#   name: workflow-pod-targeting
+#   namespace: kubeflow
+# spec:
+#   resourceSelectors:
+#     - apiVersion: v1
+#       kind: Pod
+#       labelSelector:
+#         matchExpressions:
+#           - key: workflows.argoproj.io/workflow
+#             operator: Exists
+#   overrideRules:
+#     - targetCluster:
+#         clusterNames:
+#           - storage-cluster
+#       overriders:
+#         plaintext:
+#           - path: "/spec/affinity/nodeAffinity/requiredDuringSchedulingIgnoredDuringExecution/nodeSelectorTerms"
+#             op: replace
+#             value:
+#               - matchExpressions:
+#                   - key: "cluster-target"
+#                     operator: "In"
+#                     values:
+#                       - "storage"
+#     - targetCluster:
+#         clusterNames:
+#           - compute-cluster
+#       overriders:
+#         plaintext:
+#           - path: "/spec/affinity/nodeAffinity/requiredDuringSchedulingIgnoredDuringExecution/nodeSelectorTerms"
+#             op: replace
+#             value:
+#               - matchExpressions:
+#                   - key: "cluster-target"
+#                     operator: "In"
+#                     values:
+#                       - "compute"
+
+
+# ---#######################################
 
 # apiVersion: policy.karmada.io/v1alpha1
 # kind: PropagationPolicy
