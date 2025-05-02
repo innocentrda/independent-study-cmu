@@ -1,0 +1,154 @@
+
+
+kubectl label nodes --all topology.kubernetes.io/region=aws-cluster
+
+helm repo add jetstack https://charts.jetstack.io
+helm repo update
+
+helm install cert-manager jetstack/cert-manager \
+    --namespace cert-manager --create-namespace \
+    --version v1.13.1 --set installCRDs=true \
+    --wait --debug
+    
+    
+    
+helm install admiralty oci://public.ecr.aws/admiralty/admiralty \
+    --namespace kubeflow --create-namespace \
+    --version 0.17.0 \
+    --wait --debug
+    
+    
+
+
+kubectl --kubeconfig=compute-config config view --minify --raw --output json
+
+
+
+kubectl create secret generic storage-cluster --from-literal=config="$CONFIG"
+
+
+
+
+apiVersion: multicluster.admiralty.io/v1alpha1
+kind: Target
+metadata:
+  name: compute-cluster
+  namespace: kubeflow
+spec:
+  kubeconfigSecret:
+    name: compute-cluster
+    
+---
+
+apiVersion: multicluster.admiralty.io/v1alpha1
+kind: Target
+metadata:
+  name: storage-cluster
+  namespace: kubeflow
+spec:
+  kubeconfigSecret:
+    name: storage-cluster
+
+
+
+apiVersion: multicluster.admiralty.io/v1alpha1
+kind: Source
+metadata:
+  name: cd
+spec:
+  serviceAccountName: cd
+
+
+
+
+
+apiVersion: argoproj.io/v1alpha1
+kind: Workflow
+metadata:
+  generateName: infinite-labeled-tasks-
+  namespace: kubeflow
+spec:
+  entrypoint: main
+  templates:
+  - name: main
+    dag:
+      tasks:
+      - name: task-a
+        template: infinite-task-a
+      - name: task-b
+        template: infinite-task-b
+
+  - name: infinite-task-a
+    metadata:
+      labels:
+        task: a
+        cluster: storage
+    container:
+      image: alpine
+      command: [sh, -c]
+      args: ["while true; do echo 'Task A running...'; sleep 30; done"]
+
+  - name: infinite-task-b
+    metadata:
+      labels:
+        task: b
+        cluster: compute
+    container:
+      image: alpine
+      command: [sh, -c]
+      args: ["while true; do echo 'Task B running...'; sleep 30; done"]
+
+
+
+for i in $(seq 1 10)
+do
+  cat <<EOF | kubectl apply -f -
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: global-$i
+  namespace: kubeflow
+spec:
+  template:
+    metadata:
+      annotations:
+        multicluster.admiralty.io/elect: ""
+    spec:
+      containers:
+      - name: c
+        image: busybox
+        command: ["sh", "-c", "echo Processing item $i && sleep 5"]
+        resources:
+          requests:
+            cpu: 100m
+      restartPolicy: Never
+EOF
+done
+
+
+
+for i in $(seq 1 10)
+do
+  cat <<EOF | kubectl apply -f -
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: eu-$i
+spec:
+  template:
+    metadata:
+      annotations:
+        multicluster.admiralty.io/elect: ""
+    spec:
+      nodeSelector:
+        topology.kubernetes.io/region: compute-cluster
+      containers:
+      - name: c
+        image: busybox
+        command: ["sh", "-c", "echo Processing item $i && sleep 5"]
+        resources:
+          requests:
+            cpu: 100m
+      restartPolicy: Never
+EOF
+done

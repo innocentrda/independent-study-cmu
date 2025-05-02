@@ -2,7 +2,7 @@
 
 set -e
 
-CLUSTER_NAME="aws-cluster"
+CLUSTER_NAME="aws1-cluster"
 
 # CONFIGURABLE VARIABLES
 # CLUSTER_NAME="aws-cluster"

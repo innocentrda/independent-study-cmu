@@ -1,0 +1,68 @@
+instance_private_ips = [
+  "192.168.1.224",
+  "192.168.1.129",
+  "192.168.1.109",
+]
+instance_public_ips = [
+  "52.56.65.207",
+  "35.177.213.72",
+  "35.177.169.71",
+]
+
+config setup
+  charondebug="ike 2, knl 2, cfg 2"
+
+conn onprem
+  auto=start
+  leftid=52.56.65.207              # AWS public IP
+  left=192.168.1.224
+  leftsubnet=192.168.1.0/24 # AWS internal subnet
+  right=41.186.88.70             # On-prem public IP
+  rightsubnet=10.10.10.0/24   # On-prem internal subnet
+  ike=aes256-sha256-modp1024!
+  esp=aes256-sha256!
+  keyexchange=ikev2
+  authby=psk
+
+
+=====
+52.56.65.207 41.186.88.70  : PSK "YourStrongSecret"
+============
+
+config setup
+  charondebug="ike 2, knl 2, cfg 2"
+
+conn aws
+  auto=start
+  left=%defaultroute
+  leftid=41.186.88.70 
+  leftsubnet=10.10.10.0/24
+  right=52.56.65.207
+  rightsubnet=192.168.1.0/24
+  ike=aes256-sha256-modp1024!
+  esp=aes256-sha256!
+  keyexchange=ikev2
+  authby=psk 
+
+
+sudo ip route add 10.10.10.0/24 via 192.168.1.224 dev enX0
+
+sudo ip route add 192.168.1.0/24 via 10.10.10.31
+
+
+echo "net.ipv4.conf.all.send_redirects = 0" | sudo tee -a /etc/sysctl.conf
+echo "net.ipv4.conf.default.send_redirects = 0" | sudo tee -a /etc/sysctl.conf
+echo "net.ipv4.conf.enX0.send_redirects = 0" | sudo tee -a /etc/sysctl.conf
+
+echo "net.ipv4.ip_forward = 1" | sudo tee -a /etc/sysctl.conf
+sudo sysctl -p
+
+
+sudo ipsec restart
+
+sudo ipsec down aws
+sudo ipsec up aws
+
+sudo ipsec statusall
+
+sudo ipsec reload
