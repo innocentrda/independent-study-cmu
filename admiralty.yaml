@@ -1,6 +1,6 @@
 
 
-kubectl label nodes --all topology.kubernetes.io/region=aws-cluster
+kubectl label nodes --all topology.kubernetes.io/region=storage-cluster
 
 helm repo add jetstack https://charts.jetstack.io
 helm repo update
@@ -20,11 +20,11 @@ helm install admiralty oci://public.ecr.aws/admiralty/admiralty \
     
 
 
-kubectl --kubeconfig=compute-config config view --minify --raw --output json
+CONFIG=$(kubectl --kubeconfig=aws-config config view --minify --raw --output json)
 
 
 
-kubectl create secret generic storage-cluster --from-literal=config="$CONFIG"
+kubectl create secret generic aws-cluster --from-literal=config="$CONFIG" -n kubeflow
 
 
 
@@ -32,11 +32,11 @@ kubectl create secret generic storage-cluster --from-literal=config="$CONFIG"
 apiVersion: multicluster.admiralty.io/v1alpha1
 kind: Target
 metadata:
-  name: compute-cluster
+  name: aws-cluster
   namespace: kubeflow
 spec:
   kubeconfigSecret:
-    name: compute-cluster
+    name: aws-cluster
     
 ---
 
@@ -48,6 +48,16 @@ metadata:
 spec:
   kubeconfigSecret:
     name: storage-cluster
+
+
+apiVersion: multicluster.admiralty.io/v1alpha1
+kind: Target
+metadata:
+  name: aws-cluster
+  namespace: kubeflow
+spec:
+  kubeconfigSecret:
+    name: aws-cluster
 
 
 

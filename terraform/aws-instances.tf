@@ -71,7 +71,7 @@ resource "aws_security_group" "instance_sg" {
 }
 
 resource "aws_instance" "web" {
-  count                       = 4
+  count                       = 10
   ami                         = "ami-0a94c8e4ca2674d5a"
   instance_type               = "t2.2xlarge"
   subnet_id                   = aws_subnet.public.id

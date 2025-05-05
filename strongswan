@@ -1,12 +1,38 @@
+Outputs:
+
 instance_private_ips = [
-  "192.168.1.224",
-  "192.168.1.129",
-  "192.168.1.109",
+  "192.168.1.5",
+  "192.168.1.163",
+  "192.168.1.184",
+  "192.168.1.253",
+  "192.168.1.131",
+  "192.168.1.225",
 ]
 instance_public_ips = [
-  "52.56.65.207",
-  "35.177.213.72",
-  "35.177.169.71",
+  "35.179.163.172",
+  "35.179.140.232",
+  "35.177.111.179",
+  "18.133.222.21",
+  "35.178.250.136",
+  "18.169.170.104",
+]
+
+
+
+
+Outputs:
+
+instance_private_ips = [
+  "192.168.1.144",
+  "192.168.1.252",
+  "192.168.1.153",
+  "192.168.1.92",
+]
+instance_public_ips = [
+  "3.9.114.39",
+  "35.178.187.228",
+  "35.179.150.108",
+  "3.8.39.240",
 ]
 
 config setup
@@ -14,8 +40,8 @@ config setup
 
 conn onprem
   auto=start
-  leftid=52.56.65.207              # AWS public IP
-  left=192.168.1.224
+  leftid=3.9.114.39              # AWS public IP
+  left=192.168.1.144
   leftsubnet=192.168.1.0/24 # AWS internal subnet
   right=41.186.88.70             # On-prem public IP
   rightsubnet=10.10.10.0/24   # On-prem internal subnet
@@ -26,7 +52,7 @@ conn onprem
 
 
 =====
-52.56.65.207 41.186.88.70  : PSK "YourStrongSecret"
+3.9.114.39 41.186.88.70  : PSK "YourStrongSecret"
 ============
 
 config setup
@@ -37,7 +63,7 @@ conn aws
   left=%defaultroute
   leftid=41.186.88.70 
   leftsubnet=10.10.10.0/24
-  right=52.56.65.207
+  right=3.9.114.39
   rightsubnet=192.168.1.0/24
   ike=aes256-sha256-modp1024!
   esp=aes256-sha256!
@@ -45,7 +71,7 @@ conn aws
   authby=psk 
 
 
-sudo ip route add 10.10.10.0/24 via 192.168.1.224 dev enX0
+sudo ip route add 10.10.10.0/24 via 192.168.1.144
 
 sudo ip route add 192.168.1.0/24 via 10.10.10.31
 
@@ -56,6 +82,10 @@ echo "net.ipv4.conf.enX0.send_redirects = 0" | sudo tee -a /etc/sysctl.conf
 
 echo "net.ipv4.ip_forward = 1" | sudo tee -a /etc/sysctl.conf
 sudo sysctl -p
+
+echo "net.ipv4.conf.all.send_redirects = 0" | sudo tee -a /etc/sysctl.conf
+echo "net.ipv4.conf.default.send_redirects = 0" | sudo tee -a /etc/sysctl.conf
+echo "net.ipv4.conf.mgt.send_redirects = 0" | sudo tee -a /etc/sysctl.conf
 
 
 sudo ipsec restart
